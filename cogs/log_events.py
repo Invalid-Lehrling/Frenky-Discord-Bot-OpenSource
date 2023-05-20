@@ -411,5 +411,55 @@ class log_event_module(commands.Cog):
 
     # Channel
 
+    # Neue Events, hinzugefügt von Semml
+
+    @commands.Cog.listener()
+    async def on_guild_channel_update(self, before, after):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {before.guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+
+        if before.name != after.name:
+            async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
+                if entry.target == after:
+                    embed = discord.Embed(
+                        title="Kanal bearbeitet (Name)",
+                        description=f"Bearbeitet von: {entry.user.mention}\n"
+                                    f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                        color=0x5e63ea
+                    )
+                    embed.add_field(
+                        name="<:fb_logging:1099332234051326043> | Bearbeitung",
+                        value=f"Vorher: {before.name}\n"
+                              f"Danach: {after.name}"
+                    )
+                    embed.timestamp = datetime.datetime.now()
+                    embed.set_footer(text="Kanal Name geändert")
+                    await l_channel.send(embed=embed)
+        if before.category_id != after.category_id:
+            old_category = self.bot.get_channel(before.category_id)
+            new_category = self.bot.get_channel(after.category_id)
+
+            #old_category = discord.utils.get(before.guild.categories, id=before.category_id)
+            #new_category = discord.utils.get(after.guild.categories, id=after.category_id)
+            
+            async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
+                if entry.target == after:
+                    embed = discord.Embed(
+                        title="Kanal bearbeitet (Kategorie)",
+                        description=f"Bearbeitet von: {entry.user.mention}\n"
+                                    f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                        color=0x5e63ea
+                    )
+                    embed.add_field(
+                        name="<:fb_logging:1099332234051326043> | Bearbeitung",
+                        value=f"Vorher: {old_category.name}\n"
+                              f"Danach: {new_category.name}"
+                    )
+                    embed.timestamp = datetime.datetime.now()
+                    embed.set_footer(text="Kanal Kategorie geändert")
+                    await l_channel.send(embed=embed)
+
 def setup(bot):
     bot.add_cog(log_event_module(bot))
