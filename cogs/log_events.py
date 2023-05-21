@@ -430,20 +430,21 @@ class log_event_module(commands.Cog):
                         color=0x5e63ea
                     )
                     embed.add_field(
-                        name="<:fb_logging:1099332234051326043> | Bearbeitung",
+                        name="<:fb_logging:1099332234051326043> | Name",
                         value=f"Vorher: {before.name}\n"
                               f"Danach: {after.name}"
                     )
                     embed.timestamp = datetime.datetime.now()
                     embed.set_footer(text="Kanal Name geändert")
                     await l_channel.send(embed=embed)
+
         if before.category_id != after.category_id:
             old_category = self.bot.get_channel(before.category_id)
             new_category = self.bot.get_channel(after.category_id)
 
             #old_category = discord.utils.get(before.guild.categories, id=before.category_id)
             #new_category = discord.utils.get(after.guild.categories, id=after.category_id)
-            
+
             async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
                 if entry.target == after:
                     embed = discord.Embed(
@@ -453,13 +454,76 @@ class log_event_module(commands.Cog):
                         color=0x5e63ea
                     )
                     embed.add_field(
-                        name="<:fb_logging:1099332234051326043> | Bearbeitung",
+                        name="<:fb_logging:1099332234051326043> | Position",
                         value=f"Vorher: {old_category.name}\n"
                               f"Danach: {new_category.name}"
                     )
                     embed.timestamp = datetime.datetime.now()
                     embed.set_footer(text="Kanal Kategorie geändert")
                     await l_channel.send(embed=embed)
+        if before.overwrites != after.overwrites:
+            print('0.1')
+            #async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
+                #print('0.2')
+                #if entry.target == after:
+                    #print('0.3')
+            for bef, aft in zip(before.overwrites.items(), after.overwrites.items()):
+                if bef[1] != aft[1]:
+                    print('1')
+                    changed_overwrites = []
+                    for perm in discord.Permissions.VALID_FLAGS:
+                        print('2')
+                        before_permission = getattr(bef[1], perm)
+                        after_permission = getattr(aft[1], perm)
+                        if after_permission:
+                            action = '<:fb_true:1109558619990655137>'
+                            #action = '✅'
+                            print('3')
+                        elif after_permission == None:
+                            action = '<:fb_invalid:1109558618145177751>'
+                            #action = '🔲'
+                        else:
+                            action = '<:fb_false:1109558615393706114>'
+                            #action = '❌'
+                            print('4')
+                        if before_permission != after_permission:
+                            print('5')
+                            changed_overwrites.append(f'**{perm.replace("_", " ").title()}**: {action}')
+                        print('6')
+                    print('7')
+                    embed = discord.Embed(title='Kanal bearbeitet(Berechtigungen)',
+                                                description=f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                                                        color=0x5e63ea)
+                    embed.add_field(name='<:fb_logging:1099332234051326043> | Berechtigungen',
+                                            value=f'**Berechtigungen für** {aft[0].mention} **in** {after.mention}\n\n' + '\n'.join(changed_overwrites), inline=False)
+                    embed.timestamp = datetime.datetime.now()
+                    embed.set_footer(text="Kanal Berechtigungen geändert")
+                    await l_channel.send(embed=embed)
+                    
+                        #for target in aft:
+                            #print(target)
+                        #print(bef)
+                        #print(aft)
+                        #if bef==aft:
+                        #    print('gleich')
+                        #else:
+                        #    embed = discord.Embed(
+                        #        title="Kanal bearbeitet (Berechtigungen)",
+                        #        description=f"Bearbeitet von: {entry.user.mention}\n"
+                        #                    f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                        #        color=0x5e63ea
+                        #    )
+                        #    embed.add_field(
+                        #        name="<:fb_logging:1099332234051326043> | Bearbeitung",
+                        #        value=f"Berechtigungen für {after.overwrites}"
+                        #            #f"Vorher: {before.overwrites}\n"
+                        #            #f"Danach: {after.overwrites}"
+                        #    )
+                        #    embed.timestamp = datetime.datetime.now()
+                        #    embed.set_footer(text="Kanal Berechtigungen geändert")
+                        #    await l_channel.send(embed=embed)
+
+
 
 def setup(bot):
     bot.add_cog(log_event_module(bot))
