@@ -491,7 +491,7 @@ class log_event_module(commands.Cog):
                             changed_overwrites.append(f'**{perm.replace("_", " ").title()}**: {action}')
                         print('6')
                     print('7')
-                    embed = discord.Embed(title='Kanal bearbeitet(Berechtigungen)',
+                    embed = discord.Embed(title='Kanal bearbeitet (Berechtigungen)',
                                                 description=f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>",
                                                         color=0x5e63ea)
                     embed.add_field(name='<:fb_logging:1099332234051326043> | Berechtigungen',
@@ -523,6 +523,53 @@ class log_event_module(commands.Cog):
                         #    embed.set_footer(text="Kanal Berechtigungen geändert")
                         #    await l_channel.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+
+        if before.channel != after.channel:
+            if after.channel == None:
+                cursor = db.cursor()
+                cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {before.channel.guild.id}")
+                log_channel = cur.fetchone()
+                l_channel = self.bot.get_channel(log_channel[0])
+                embed = discord.Embed(title='Sprachkanal verlassen (Mitglied)',
+                                    description=f"Verlassen von: {member.mention}\n"
+                                                f"Verlassen am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                                    color=0x5e63ea)
+                embed.add_field(name='<:fb_logging:1099332234051326043> | Sprachkanal',
+                                value=f'Sprachkanal vorher: {before.channel.mention}', inline=False)
+                embed.timestamp = datetime.datetime.now()
+                embed.set_footer(text="Sprachkanal verlassen")
+                await l_channel.send(embed=embed)
+            if before.channel == None:
+                cursor = db.cursor()
+                cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {after.channel.guild.id}")
+                log_channel = cur.fetchone()
+                l_channel = self.bot.get_channel(log_channel[0])
+                embed = discord.Embed(title='Sprachkanal beigetreten (Mitglied)',
+                                    description=f"Beigetreten von: {member.mention}\n"
+                                                f"Beigetreten am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                                    color=0x5e63ea)
+                embed.add_field(name='<:fb_logging:1099332234051326043> | Sprachkanal',
+                                value=f'Aktueller Sprachkanal: {after.channel.mention}', inline=False)
+                embed.timestamp = datetime.datetime.now()
+                embed.set_footer(text="Sprachkanal beigetreten")
+                await l_channel.send(embed=embed)
+            if before.channel != None and after.channel != None:
+                cursor = db.cursor()
+                cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {after.channel.guild.id}")
+                log_channel = cur.fetchone()
+                l_channel = self.bot.get_channel(log_channel[0])
+                embed = discord.Embed(title='Sprachkanal gewechselt (Mitglied)',
+                                    description=f"Gewechselt von: {member.mention}\n"
+                                                f"Gewechselt am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                                    color=0x5e63ea)
+                embed.add_field(name='<:fb_logging:1099332234051326043> | Sprachkanal',
+                                value=f'Sprachkanal vorher: {before.channel.mention}\n'
+                                    f'Aktueller Sprachkanal: {after.channel.mention}', inline=False)
+                embed.timestamp = datetime.datetime.now()
+                embed.set_footer(text="Sprachkanal gewechselt")
+                await l_channel.send(embed=embed)
 
 
 def setup(bot):
