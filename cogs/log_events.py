@@ -571,6 +571,60 @@ class log_event_module(commands.Cog):
                 embed.set_footer(text="Sprachkanal gewechselt")
                 await l_channel.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_invite_create(self, invite):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {invite.guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+        max_uses = invite.max_uses
+        if max_uses == 0:
+            max_uses = 'keins'
+        if invite.expires_at == None:
+            embed = discord.Embed(title='Servereinladung erstellt (dauerhaft)',
+                                description=f"Erstellt von: {invite.inviter.mention}\n"
+                                            f"Erstellt am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                                color=0x5e63ea)
+            embed.add_field(name='<:fb_logging:1099332234051326043> | Einladung',
+                            value=f'Link: {invite.url}\n'
+                                f'Limit: {max_uses}\n'
+                                f'Kanal: {invite.channel.mention}', inline=False)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text="Servereinladung erstellt")
+            await l_channel.send(embed=embed)
+        else:
+            embed = discord.Embed(title='Servereinladung erstellt (temporär)',
+                                description=f"Erstellt von: {invite.inviter.mention}\n"
+                                            f"Erstellt am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                                color=0x5e63ea)
+            embed.add_field(name='<:fb_logging:1099332234051326043> | Einladung',
+                            value=f'Link: {invite.url}\n'
+                                f'Läuft ab am: <t:{int(invite.expires_at.timestamp())}:F>\n'
+                                f'Limit: {max_uses}\n'
+                                f'Kanal: {invite.channel.mention}', inline=False)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text="Servereinladung erstellt")
+            await l_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_invite_delete(self, invite):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {invite.guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+        max_uses = invite.max_uses
+        if max_uses == 0:
+            max_uses = 'keins'
+        embed = discord.Embed(title='Servereinladung gelöscht',
+                            description=f"Erstellt am: <t:{int(datetime.datetime.now().timestamp())}:f>",
+                            color=0x5e63ea)
+        embed.add_field(name='<:fb_logging:1099332234051326043> | Einladung',
+                        value=f'Link: {invite.url}\n'
+                            f'Limit: {max_uses}\n'
+                            f'Kanal: {invite.channel.mention}', inline=False)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text="Servereinladung gelöscht")
+        await l_channel.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(log_event_module(bot))
