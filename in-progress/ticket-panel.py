@@ -51,7 +51,9 @@ class start_einrichtung_button(discord.ui.View):
         embed = discord.Embed(
             title="Ticket Panel | Einrichtung",
             description="Herzlich Willkommen in der Einrichtung vom Ticket Panel."
-                        "Folge bitte jedem der Schritte die dir jetzt genannt werden."
+                        "Folge bitte jedem der Schritte die dir jetzt genannt werden.",
+            color=0x5e63ea
+
         )
         embed.add_field(
             name="Ticket Embed Beschreibung",
