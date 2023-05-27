@@ -462,35 +462,24 @@ class log_event_module(commands.Cog):
                     embed.set_footer(text="Kanal Kategorie geändert")
                     await l_channel.send(embed=embed)
         if before.overwrites != after.overwrites:
-            print('0.1')
             #async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
                 #print('0.2')
                 #if entry.target == after:
                     #print('0.3')
             for bef, aft in zip(before.overwrites.items(), after.overwrites.items()):
                 if bef[1] != aft[1]:
-                    print('1')
                     changed_overwrites = []
                     for perm in discord.Permissions.VALID_FLAGS:
-                        print('2')
                         before_permission = getattr(bef[1], perm)
                         after_permission = getattr(aft[1], perm)
                         if after_permission:
                             action = '<:fb_true:1109558619990655137>'
-                            #action = '✅'
-                            print('3')
                         elif after_permission == None:
                             action = '<:fb_invalid:1109558618145177751>'
-                            #action = '🔲'
                         else:
                             action = '<:fb_false:1109558615393706114>'
-                            #action = '❌'
-                            print('4')
                         if before_permission != after_permission:
-                            print('5')
                             changed_overwrites.append(f'**{perm.replace("_", " ").title()}**: {action}')
-                        print('6')
-                    print('7')
                     embed = discord.Embed(title='Kanal bearbeitet (Berechtigungen)',
                                                 description=f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>",
                                                         color=0x5e63ea)
@@ -625,6 +614,165 @@ class log_event_module(commands.Cog):
         embed.timestamp = datetime.datetime.now()
         embed.set_footer(text="Servereinladung gelöscht")
         await l_channel.send(embed=embed)
+        
+    @commands.Cog.listener()
+    async def on_guild_emojis_update(self, guild, before, after):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+        if len(before)>len(after):
+            for emoji in before:
+                if emoji not in after:
+                    embed = discord.Embed(title='Emoji wurde entfernt',
+                                        description=f"Entfernt am am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
+                                        color=0x5e63ea)
+                    embed.add_field(name='<:fb_logging:1099332234051326043> | Emoji',
+                                    value=f'Name: `{emoji.name}`\n', inline=False)
+                    embed.timestamp = datetime.datetime.now()
+                    embed.set_footer(text="Emoji gelöscht")
+                    await l_channel.send(embed=embed)
+        elif len(before)<len(after):
+            for emoji in after:
+                if emoji not in before:
+                    embed = discord.Embed(title='Emoji wurde hinzugefügt',
+                                        description=f"Erstellt am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
+                                        color=0x5e63ea)
+                    embed.add_field(name='<:fb_logging:1099332234051326043> | Emoji',
+                                    value=f'Name: `{emoji.name}`\n'
+                                        f'Emoji: {emoji}', inline=False)
+                    embed.timestamp = datetime.datetime.now()
+                    embed.set_footer(text="Emoji hinzugefügt")
+                    await l_channel.send(embed=embed)
+        else:
+            names_before = []
+            names_after = []
+            for emoji in before:
+                names_before.append(emoji.name)
+            for emoji in after:
+                names_after.append(emoji.name)
+
+            for emoji in before:
+                if emoji.name not in names_after:
+                    em=emoji
+                    name=emoji.name
+            for emoji in after:
+                if emoji.name not in names_before:
+                    name_=emoji.name
+            try:
+                embed = discord.Embed(title='Emoji wurde umbenannt',
+                                    description=f"Umbenannt am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
+                                    color=0x5e63ea)
+                embed.add_field(name='<:fb_logging:1099332234051326043> | Emoji',
+                                value=f'Vorher: `{name}`\n'
+                                    f'Nachher: `{name_}`\n'
+                                    f'Emoji: {em}', inline=False)
+                embed.timestamp = datetime.datetime.now()
+                embed.set_footer(text="Emoji umbenannt")
+                await l_channel.send(embed=embed)
+            except:
+                embed = discord.Embed(title='Emoji wurde umbenannt',
+                                    description=f"Umbenannt am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
+                                    color=0x5e63ea)
+                embed.add_field(name='<:fb_logging:1099332234051326043> | Emoji',
+                                value=f'In den Emojis kommt bzw kam eine Doppelung der Emojinamen vor, daher konnten die Namen des veränderten Emojis nicht identifiziert werden. Überprüfe die Emojis nach Namendoppelungen und passe diese gegebenfalls an.\n', inline=False)
+                embed.timestamp = datetime.datetime.now()
+                embed.set_footer(text="Emoji umbenannt")
+                await l_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_role_create(self, role):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {role.guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+        mention = role.mention
+        id = role.id
+        name = role.name
+
+        embed = discord.Embed(title='Rolle wurde erstellt',
+                            description=f"Erstellt am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
+                            color=0x5e63ea)
+        embed.add_field(name='<:fb_logging:1099332234051326043> | Rolle',
+                        value=f'Name: {name}\n'
+                            f'Erwähnung: {mention}\n'
+                            f'ID: {id}', inline=False)
+
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text="Rolle erstellt")
+        await l_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_role_update(self, before, after):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {after.guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+        hoist = '<:fb_false:1109558615393706114>'
+        mentionable = '<:fb_false:1109558615393706114>'
+        color = after.color
+        mention = after.mention
+        id = after.id
+        name = after.name
+        perms = []
+        if after.hoist:
+            hoist = '<:fb_true:1109558619990655137>'
+        if after.mentionable:
+            mentionable = '<:fb_true:1109558619990655137>'
+        if before.name != after.name:
+            name = f'{before.name} ➜ {after.name}'
+        if before.color != after.color:
+            color = f'{before.color} ➜ {after.color}'
+        if before.mentionable != after.mentionable:
+            perms.append(f'**Allow anyone to @mention this role**: {mentionable}')
+        if before.hoist != after.hoist:
+            perms.append(f'**Display role members separately from online members**: {hoist}')
+        
+        for perm in discord.Permissions.VALID_FLAGS:
+                        before_permission = getattr(before.permissions, perm)
+                        after_permission = getattr(after.permissions, perm)
+                        if after_permission:
+                            action = '<:fb_true:1109558619990655137>'
+                        else:
+                            action = '<:fb_false:1109558615393706114>'
+                        if before_permission != after_permission:
+                            perms.append(f'**{perm.replace("_", " ").title()}**: {action}')
+        embed = discord.Embed(title='Rolle wurde bearbeitet',
+                            description=f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>\n\n<:fb_logging:1099332234051326043> **| Perms**\n" +
+                            f'\n'.join(perms),
+                            color=0x5e63ea)
+        embed.add_field(name='<:fb_logging:1099332234051326043> | Rolle',
+                        value=f'Name: {name}\n'
+                            f'Erwähnung: {mention}\n'
+                            f'Farbe: {color}\n'
+                            f'ID: {id}', inline=False)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text="Rolle bearbeitet")
+        await l_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_role_delete(self, role):
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {role.guild.id}")
+        log_channel = cur.fetchone()
+        l_channel = self.bot.get_channel(log_channel[0])
+        id = role.id
+        name = role.name
+        color = role.color
+
+        embed = discord.Embed(title='Rolle wurde gelöscht',
+                            description=f"Gelöscht am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
+                            color=0x5e63ea)
+        embed.add_field(name='<:fb_logging:1099332234051326043> | Rolle',
+                        value=f'Name: {name}\n'
+                            f'Farbe: {color}\n'
+                            f'ID: {id}', inline=False)
+
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text="Rolle gelöscht")
+        await l_channel.send(embed=embed)
+
+
 
 def setup(bot):
     bot.add_cog(log_event_module(bot))
