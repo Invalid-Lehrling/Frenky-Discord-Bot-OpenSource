@@ -772,25 +772,6 @@ class log_event_module(commands.Cog):
         embed.set_footer(text="Rolle gelöscht")
         await l_channel.send(embed=embed)
     
-    @commands.Cog.listener()
-    async def on_guild_update(self, before, after):
-        cursor = db.cursor()
-        cur = cursor.execute(f"SELECT channel_id FROM log_setup WHERE guild_id = {after.id}")
-        log_channel = cur.fetchone()
-        l_channel = self.bot.get_channel(log_channel[0])
-        vanity_bool = getattr(after.features, 'VANITY_URL')
-        if vanity_bool:
-            if before.vanity_invite() != after.vanity_invite():
-                embed = discord.Embed(title='Vanity Invite wurde bearbeitet',
-                                    description=f"Bearbeitet am: <t:{int(datetime.datetime.now().timestamp())}:f>\n",
-                                    color=0x5e63ea)
-                embed.add_field(name='<:fb_logging:1099332234051326043> | Invite',
-                                value=f'Vorher: {before.vanity_invite()}\n'
-                                    f'Nachher: {after.vanity_invite()}\n', inline=False)
-
-                embed.timestamp = datetime.datetime.now()
-                embed.set_footer(text="Vanity Invite bearbeitet")
-                await l_channel.send(embed=embed)
 
 
 
