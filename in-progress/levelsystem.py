@@ -84,5 +84,8 @@ class levelsystem(commands.Cog):
         # die anderen cases noch hinzufügen + modal
 
 # on_message event coden, bei dem die user xp bekommen und level aufsteigen
+
+# /rank command darf auch nicht fehlen bitte
+
 def setup(bot):
     bot.add_cog(levelsystem(bot))
