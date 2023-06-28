@@ -25,7 +25,7 @@ class levelsystem(commands.Cog):
     levelsystem = discord.SlashCommandGroup("levelsystem")
 
     @levelsystem.command(
-        description="✅ × aktiviere das Levelsystem"
+        description="🏆 × aktiviere das Levelsystem"
     )
     @commands.has_permissions(administrator=True)
     async def enable(self, ctx):
@@ -69,7 +69,7 @@ class levelsystem(commands.Cog):
     levelup = discord.SlashCommandGroup("levelup")
 
     @levelup.command(
-        description="✅ × lege fest, wie der User seine Levelup-Benachrichtigung erhalten soll"
+        description="📩 × lege fest, wie der User seine Levelup-Benachrichtigung erhalten soll"
     )
 
     @commands.has_permissions(administrator=True)
