@@ -81,7 +81,7 @@ class levelsystem(commands.Cog):
                             icon_url="https://cdn.discordapp.com/emojis/1097455801595084805.webp?size=96&quality=lossless")
             embed.timestamp = datetime.datetime.now()
             await ctx.respond(embed=embed)
-        # die anderen cases noch hinzufügen
+        # die anderen cases noch hinzufügen + modal
 
 # on_message event coden, bei dem die user xp bekommen und level aufsteigen
 def setup(bot):
