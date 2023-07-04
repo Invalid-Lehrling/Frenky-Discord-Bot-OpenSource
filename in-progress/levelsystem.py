@@ -92,6 +92,23 @@ class levelsystem(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def type(self, ctx, type: Option(str, "Wähle einen Typ", choices=["Channel", "DM", "Default"])):
         if type == "DM":
+
+            cursor = db.cursor()
+            cur = cursor.execute(f"SELECT guild_id FROM servers WHERE guild_id = {ctx.guild.id}")
+            level_system = cur.fetchone()
+            if level_system is None:
+                print('datensatz nicht vorhanden')
+                sql_content = "INSERT INTO servers VALUES(?,?,?,?)"
+                val = (ctx.guild.id, "dm", 0, 0)
+
+            elif level_system is not None:
+                print('datensatz vorhanden')
+                sql_content = "UPDATE servers SET type = ?, channel = ? WHERE guild_id = ?"
+                val = ("dm", 0, ctx.guild.id)
+            cursor.execute(sql_content, val)
+            db.commit()
+            print('datensatz aktualisiert')
+
             embed = discord.Embed(description=f"> <:fb_true:1109558619990655137> | Die User werden ihre Benachrichtigungen per DM erhalten",
                                 color=0x2b2d31)
             embed.set_author(name="Level-Up Benachrichtigungen - DM", 
@@ -100,6 +117,23 @@ class levelsystem(commands.Cog):
             await ctx.respond(embed=embed, ephemeral = True)
 
         elif type == "Default":
+
+            cursor = db.cursor()
+            cur = cursor.execute(f"SELECT guild_id FROM servers WHERE guild_id = {ctx.guild.id}")
+            level_system = cur.fetchone()
+            if level_system is None:
+                print('datensatz nicht vorhanden')
+                sql_content = "INSERT INTO servers VALUES(?,?,?,?)"
+                val = (ctx.guild.id, "default", 0, 0)
+
+            elif level_system is not None:
+                print('datensatz vorhanden')
+                sql_content = "UPDATE servers SET type = ?, channel = ? WHERE guild_id = ?"
+                val = ("default", 0, ctx.guild.id)
+            cursor.execute(sql_content, val)
+            db.commit()
+            print('datensatz aktualisiert')
+
             embed = discord.Embed(description=f"> <:fb_true:1109558619990655137> | Die User werden ihre Benachrichtigungen im Kanal der jeweils letzten gesendeten Nachricht erhalten",
                                 color=0x2b2d31)
             embed.set_author(name="Level-Up Benachrichtigungen - default", 
@@ -108,16 +142,40 @@ class levelsystem(commands.Cog):
             await ctx.respond(embed=embed, ephemeral = True)
 
         elif type == "Channel":
-            embed2 = discord.Embed(description=f"> <:fb_true:1109558619990655137> | Die User werden ihre Benachrichtigungen in #kanal erhalten",
-                                color=0x2b2d31)
-            embed2.set_author(name="Level-Up Benachrichtigungen - Bestimmter Kanal", 
-                            icon_url="https://cdn.discordapp.com/emojis/1097455801595084805.webp?size=96&quality=lossless")
-            embed2.timestamp = datetime.datetime.now()
-            embed = discord.Embed(title = "Frenky | Levelsystem Einrichtung", description = "Schreibe einen Kanal für die Levelup Message", color = 0x2b2d31)
-            await ctx.respond(embed=embed, ephemeral = True)
-        # die anderen cases noch hinzufügen + modal
+            embed = discord.Embed(title = "Frenky | Levelsystem Einrichtung", description = "Lege einen Kanal für die Levelup Message fest", color = 0x2b2d31)
+            await ctx.respond(embed=embed, ephemeral = True, view = select_the_channel())
 
 # on_message event coden, bei dem die user xp bekommen und level aufsteigen
 # server aus db removen + user aus db removen, wenn bot removed wird
 def setup(bot):
     bot.add_cog(levelsystem(bot))
+
+class select_the_channel(discord.ui.View):
+    @discord.ui.select(
+        select_type=discord.ComponentType.channel_select,
+        channel_types=[discord.ChannelType.text, discord.ChannelType.voice]
+    )
+    async def select_callback(self, select, interaction):
+
+        cursor = db.cursor()
+        cur = cursor.execute(f"SELECT guild_id FROM servers WHERE guild_id = {self.message.guild.id}")
+        level_system = cur.fetchone()
+        if level_system is None:
+            print('datensatz nicht vorhanden')
+            sql_content = "INSERT INTO servers VALUES(?,?,?,?)"
+            val = (self.message.guild.id, "channel", 0, select.values[0].id)
+
+        elif level_system is not None:
+            print('datensatz vorhanden')
+            sql_content = "UPDATE servers SET type = ?, channel = ? WHERE guild_id = ?"
+            val = ("channel", select.values[0].id, self.message.guild.id)
+        cursor.execute(sql_content, val)
+        db.commit()
+        print('datensatz aktualisiert')
+
+        embed2 = discord.Embed(description=f"> <:fb_true:1109558619990655137> | Die User werden ihre Benachrichtigungen in {select.values[0].mention} erhalten",
+                                color=0x2b2d31)
+        embed2.set_author(name="Level-Up Benachrichtigungen - Bestimmter Kanal", 
+                            icon_url="https://cdn.discordapp.com/emojis/1097455801595084805.webp?size=96&quality=lossless")
+        embed2.timestamp = datetime.datetime.now()
+        await interaction.response.send_message(embed=embed2, ephemeral=True)
