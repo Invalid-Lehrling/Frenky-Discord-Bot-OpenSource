@@ -79,7 +79,7 @@ async def status_task():
         await asyncio.sleep(30)
         await bot.change_presence(activity=discord.Game(name=f"mit {len(bot.users)} Nutzer"))
         await asyncio.sleep(30)
-        await bot.change_presence(activity=discord.Game(name=f"mit InvalidLehrling#0187"))
+        await bot.change_presence(activity=discord.Game(name=f"mit InvalidLehrling"))
         await asyncio.sleep(30)
         await bot.change_presence(activity=discord.Game(name=f"type /help"))
         await asyncio.sleep(60)
