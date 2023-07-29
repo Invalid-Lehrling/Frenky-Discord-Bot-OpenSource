@@ -17,8 +17,8 @@ class ticket_modul(commands.Cog):
     panel = ticket.create_subgroup("panel")
 
     @panel.command(
-        name="open",
-        description="📌 × Gewehe dir einen Einblick in dein Ticket Panel."
+        name="settings",
+        description="🎫 × Gewehe dir einen Einblick in dein Ticket Panel."
     )
     @commands.has_permissions(administrator=True)
     async def _open_panel(self, ctx):
@@ -269,21 +269,17 @@ class einrichtungs_buttons(discord.ui.View):
     )
     async def cancel_callback(self, button, interaction: discord.Interaction):
         embed = discord.Embed(
-            title = "Ticket Panel | Einrichtung",
-            description = "Die Einrichtung wurde erfolgreich abgebrochen.",
-            color = 0x2b2d31
+            title="Ticket Panel | Einrichtung",
+            description="Die Einrichtung wurde erfolgreich abgebrochen.",
+            color=0x2b2d31
         )
-        await interaction.response.edit_message(embed = embed, view = None, delete_after = 10)
+        await interaction.response.edit_message(embed=embed, view=None, delete_after=10)
 
     @discord.ui.button(
         label="Einrichtung löschen",
         style=discord.ButtonStyle.grey
     )
     async def delete_callback(self, button, interaction: discord.Interaction):
-        cursor = ticket_db.cursor()
-        cursor.execute(f"DELETE FROM ticket_panel WHERE guild_id = {interaction.guild.id}")
-        ticket_db.commit()
-
         embed = discord.Embed(
             title="Ticket Panal | Löschung",
             description="Willst du deine gesamten Einstellungen löschen?",
@@ -331,6 +327,12 @@ class einrichtungs_buttons(discord.ui.View):
                 emoji="<:fb_logging:1099332234051326043>",
                 description="Speichert das Ticket Transcript in einem Kanal.",
                 value="tplc"
+            ),
+            discord.SelectOption(
+                label="Ticket Format",
+                emoji="<:fb_fire:1097482115882430474>",
+                description="Setze ein Format für den Ticket Kanal.",
+                value="tpcf"
             )
         ]
     )
@@ -355,6 +357,14 @@ class einrichtungs_buttons(discord.ui.View):
             )
 
             await interaction.response.edit_message(embed=embed, view=button_customization(timeout=None))
+        if "tpr" in interaction.data["values"]:
+            embed = discord.Embed(
+                title="Ticket Panel | Einrichtung",
+                description="Setze eine Rolle welche in Tickets gepingt werden soll.",
+                color=0x2b2d31
+            )
+
+            await interaction.response.edit_message(embed = embed, view=...)
 
     @discord.ui.button(
         label="Weiter  ▶",
@@ -392,7 +402,29 @@ class einrichtungs_buttons(discord.ui.View):
                             " oder weiter bearbeiten?",
                 color=0x2b2d31
             )
-            await interaction.response.edit_message(embed=embed, view=confirmation_sending(timeout=None), delete_after=15)
+            await interaction.response.edit_message(embed=embed, view=confirmation_sending(timeout=None),
+                                                    delete_after=15)
+
+
+class ping_role_view(discord.ui.View):
+    @discord.ui.role_select(
+        placeholder = "Wähle eine Rolle",
+        min_values=1,
+        max_values=1
+    )
+    async def role_select_callback(self, select, interaction: discord.Interaction):
+        cursor = ticket_db.cursor()
+
+        cursor.execute(f'''UPDATE ticket_panel SET ping_role = {select.values[0]} WHERE guild_id = {interaction.guild.id}''')
+        ticket_db.commit()
+        embed = discord.Embed(
+            title = "Ticket Panel | Ping Rolle",
+            description = f"{select.values[0]} wurde erfolgreich als **Ticket - Ping - Rolle** gesetzt.",
+            color = 0x2b2d31
+        )
+        await interaction.response.edit_message(embed = embed, view = back_to_panel())
+
+# -------------------------------------------- Ticket --------------------------------------------
 
 
 class confirmation_sending(discord.ui.View):
@@ -402,11 +434,11 @@ class confirmation_sending(discord.ui.View):
     )
     async def send_callback(self, button, interaction: discord.Interaction):
         embed = discord.Embed(
-            title = "Ticket Panel | Einrichtung",
-            description = "Das Ticket wurde erfolgreich gesendet.\n Du kannst das Panel nun weiter bearbeiten.",
-            color = 0x2b2d31
+            title="Ticket Panel | Einrichtung",
+            description="Das Ticket wurde erfolgreich gesendet.\n Du kannst das Panel nun weiter bearbeiten.",
+            color=0x2b2d31
         )
-        await interaction.response.edit_message(embed = embed, view = back_to_panel(timeout=None))
+        await interaction.response.edit_message(embed=embed, view=back_to_panel(timeout=None))
 
         cursor = ticket_db.cursor()
         cursor.execute(
@@ -453,8 +485,13 @@ class confirmation_sending(discord.ui.View):
                 emoji=emoji
             )
 
+        async def create_ticket_callback(self, interaction: discord.Interaction):
+            return
+
         view.add_item(create_ticket_button)
         await channel1.send(embed=embed, view=view)
+
+# -------------------------------------------- Ticket --------------------------------------------
 
     @discord.ui.button(
         label="Zur Einrichtung",
