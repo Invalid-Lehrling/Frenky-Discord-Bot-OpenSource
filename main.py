@@ -70,7 +70,25 @@ else:
         '''CREATE TABLE IF NOT EXISTS tempchannel_setup(guild_id INTEGER, voice_id INTEGER, voice_name TEXT, text_id INTEGER, voice_category INTEGER)''')
     cur2.execute(
         '''CREATE TABLE IF NOT EXISTS tempchannel_user(guild_id INTEGER, user_id INTEGER, channel_name TEXT, limit_int INTEGER, is_locked Text)''')
-
+if os.path.exists('sql-databases/ticket.sqlite'):
+    conn2 = sqlite3.connect("sql-databases/ticket.sqlite")
+    c2 = conn2.cursor()
+    pass
+else:
+    connect_database2 = sqlite3.connect('sql-databases/ticket.sqlite')
+    cur2 = connect_database2.cursor()
+    cur2.execute(
+        '''CREATE TABLE IF 
+        NOT EXISTS ticket_panel(
+        guild_id INTEGER PRIMARY KEY, 
+        ticket_channel INTEGER, 
+        ticket_text TEXT,
+        ping_role INTEGER,
+        ticket_category INTEGER,
+        team_role INTEGER,
+        button_color TEXT,
+        button_text TEXT,
+        button_emoji TEXT)''')
 
 async def status_task():
     while True:
